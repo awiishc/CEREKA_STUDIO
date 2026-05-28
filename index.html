@@ -178,10 +178,12 @@
         <div><div class="kicker">Starting Offers</div><h2>Packages</h2></div>
         <p>Package details can later be connected to Supabase so you can update prices and descriptions anytime.</p>
       </div>
-      <div class="packages">
-        <article class="card"><h3>Photo Session</h3><div class="price">RM 250+</div><p>Suitable for portraits, graduation photos, couple shoots, or small creative sessions.</p><ul><li>1 shooting session</li><li>Edited final photos</li><li>Online delivery link</li></ul></article>
-        <article class="card"><h3>Event Coverage</h3><div class="price">RM 500+</div><p>For events, birthdays, engagements, small ceremonies, and private gatherings.</p><ul><li>Event photo coverage</li><li>Highlight selection</li><li>Full edited album</li></ul></article>
-        <article class="card"><h3>Photo + Video</h3><div class="price">Custom</div><p>Complete visual coverage with both photo album and cinematic video highlight.</p><ul><li>Photo coverage</li><li>Short highlight film</li><li>Custom timeline</li></ul></article>
+      <div class="packages" id="packagesGrid">
+        <article class="card">
+          <h3>Loading packages...</h3>
+          <div class="price">...</div>
+          <p>Reading package details from Supabase.</p>
+        </article>
       </div>
     </div>
   </section>
@@ -220,6 +222,7 @@
     const portfolioGrid = document.getElementById("portfolioGrid");
     const portfolioFilters = document.getElementById("portfolioFilters");
     let allPortfolioItems = [];
+    const packagesGrid = document.getElementById("packagesGrid");
 
     function escapeHTML(value) {
       return String(value || "").replace(/[&<>'"]/g, function(char) {
@@ -319,6 +322,70 @@
       }).join("");
     }
 
+
+    function renderPackages(packages) {
+      if (!packagesGrid) return;
+
+      if (!packages || packages.length === 0) {
+        packagesGrid.innerHTML = `
+          <article class="card">
+            <h3>No packages yet</h3>
+            <div class="price">Soon</div>
+            <p>Packages will appear here once they are added in the admin dashboard.</p>
+          </article>
+        `;
+        return;
+      }
+
+      packagesGrid.innerHTML = packages.map((pkg) => {
+        const title = escapeHTML(pkg.title || "Untitled Package");
+        const price = escapeHTML(pkg.price || "Custom");
+        const description = escapeHTML(pkg.description || "");
+        const includes = String(pkg.includes || "")
+          .split(/\n|,/)
+          .map(item => item.trim())
+          .filter(Boolean);
+
+        const includesHtml = includes.length
+          ? `<ul>${includes.map(item => `<li>${escapeHTML(item)}</li>`).join("")}</ul>`
+          : "";
+
+        return `
+          <article class="card">
+            <h3>${title}</h3>
+            <div class="price">${price}</div>
+            <p>${description}</p>
+            ${includesHtml}
+          </article>
+        `;
+      }).join("");
+    }
+
+    async function loadPackages() {
+      if (!packagesGrid) return;
+
+      const { data, error } = await supabaseClient
+        .from("packages")
+        .select("id,title,price,description,includes,created_at")
+        .eq("is_visible", true)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Supabase packages error:", error);
+        packagesGrid.innerHTML = `
+          <article class="card">
+            <h3>Cannot load packages</h3>
+            <div class="price">Error</div>
+            <p>Check Supabase packages table and RLS policies.</p>
+          </article>
+        `;
+        return;
+      }
+
+      renderPackages(data || []);
+    }
+
+
     async function loadPortfolio() {
       const { data, error } = await supabaseClient
         .from("portfolio_items")
@@ -406,6 +473,7 @@
 
 
     loadPortfolio();
+    loadPackages();
   </script>
 </body>
 </html>
