@@ -117,7 +117,7 @@
   <nav class="nav">
     <a href="#home" class="brand"><div class="brand-mark">DV</div><span>Cereka Studio</span></a>
     <div class="nav-links">
-      <a href="#services">Services</a><a href="#portfolio">Portfolio</a><a href="#packages">Packages</a><a href="#contact">Contact</a><a href="#admin">Admin</a>
+      <a href="#services">Services</a><a href="#portfolio">Portfolio</a><a href="#packages">Packages</a><a href="#contact">Contact</a><a href="https://cs-login-page.vercel.app/" target="_blank" rel="noopener">Admin</a>
     </div>
     <a class="nav-cta" href="#contact">Book Now</a>
   </nav>
@@ -194,16 +194,6 @@
     <div class="container contact">
       <div class="card contact-info"><div class="kicker">Book A Date</div><h2>Let’s create something memorable.</h2><p>Clients can send inquiries here. Later, this form can submit directly into a Supabase booking_requests table.</p><div class="detail"><span>WhatsApp: +60 XX-XXX XXXX</span><span>Email: hello@cerekastudio.com</span><span>Location: Malaysia</span></div></div>
       <form class="card form"><input type="text" placeholder="Your name"><input type="tel" placeholder="Phone / WhatsApp"><input type="email" placeholder="Email address"><select><option>Choose service</option><option>Photography</option><option>Videography</option><option>Photo + Video</option><option>Brand Content</option></select><input type="date"><input type="text" placeholder="Event location"><textarea placeholder="Tell me about your event or project"></textarea><button type="button" class="btn primary">Submit Inquiry</button></form>
-    </div>
-  </section>
-
-  <section id="admin" class="admin">
-    <div class="container">
-      <div class="section-head"><div><div class="kicker">Future Function</div><h2>Admin Dashboard Preview</h2></div><p>This is only a mockup. Later, it will connect to Supabase Auth, Database, and Storage.</p></div>
-      <div class="admin-grid">
-        <div class="card"><h3>Add Portfolio Item</h3><br><div class="fake-input">Upload image to Supabase Storage</div><div class="fake-input">Project title</div><div class="fake-input">Category: Event / Portrait / Video</div><div class="fake-input">Video URL / Google Drive link</div><div class="fake-input">Show on homepage: Yes / No</div><button class="btn primary" type="button">Save Item</button></div>
-        <div class="flow"><div class="step"><span>1</span><div><strong>Admin uploads photo</strong><p>Image goes into the Supabase Storage bucket.</p></div></div><div class="step"><span>2</span><div><strong>Image URL is saved</strong><p>Title, category, description, and media URL are stored in the portfolio table.</p></div></div><div class="step"><span>3</span><div><strong>Website updates automatically</strong><p>The public portfolio page reads visible items from Supabase.</p></div></div><div class="step"><span>4</span><div><strong>Booking form stores requests</strong><p>Client inquiries can be saved inside the booking_requests table.</p></div></div></div>
-      </div>
     </div>
   </section>
 
