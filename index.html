@@ -164,11 +164,7 @@
         <p>This section now reads visible portfolio items from your Supabase portfolio_items table.</p>
       </div>
       <div class="filters" id="portfolioFilters">
-        <button class="pill active" data-filter="all">All</button>
-        <button class="pill" data-filter="Event">Events</button>
-        <button class="pill" data-filter="Portrait">Portraits</button>
-        <button class="pill" data-filter="Wedding">Weddings</button>
-        <button class="pill" data-filter="Video">Video</button>
+        <button class="pill active" data-title-filter="all">All</button>
       </div>
       <div class="portfolio" id="portfolioGrid">
         <article class="item large"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=900&q=80')"></div><div class="item-content"><span class="tag">Loading</span><h3>Loading Supabase...</h3><p>Reading visible portfolio items.</p></div></article>
@@ -206,7 +202,7 @@
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const portfolioGrid = document.getElementById("portfolioGrid");
-    const filterButtons = document.querySelectorAll("#portfolioFilters .pill");
+    const portfolioFilters = document.getElementById("portfolioFilters");
     let allPortfolioItems = [];
 
     function escapeHTML(value) {
@@ -225,6 +221,46 @@
       if (index === 0) return "item large";
       if (index === 3) return "item wide";
       return "item";
+    }
+
+    function renderTitleFilters(items) {
+      const uniqueTitles = [];
+      const seen = new Set();
+
+      items.forEach(item => {
+        const title = String(item.title || "Untitled Project").trim();
+        const key = title.toLowerCase();
+
+        if (title && !seen.has(key)) {
+          seen.add(key);
+          uniqueTitles.push(title);
+        }
+      });
+
+      portfolioFilters.innerHTML = `
+        <button class="pill active" data-title-filter="all">All</button>
+        ${uniqueTitles.map(title => `<button class="pill" data-title-filter="${escapeHTML(title)}">${escapeHTML(title)}</button>`).join("")}
+      `;
+
+      portfolioFilters.querySelectorAll(".pill").forEach(button => {
+        button.addEventListener("click", () => {
+          portfolioFilters.querySelectorAll(".pill").forEach(btn => btn.classList.remove("active"));
+          button.classList.add("active");
+
+          const selectedTitle = button.dataset.titleFilter;
+
+          if (selectedTitle === "all") {
+            renderPortfolio(allPortfolioItems);
+            return;
+          }
+
+          const filtered = allPortfolioItems.filter(item => {
+            return String(item.title || "Untitled Project").trim() === selectedTitle;
+          });
+
+          renderPortfolio(filtered);
+        });
+      });
     }
 
     function renderPortfolio(items) {
@@ -290,27 +326,9 @@
       }
 
       allPortfolioItems = data || [];
+      renderTitleFilters(allPortfolioItems);
       renderPortfolio(allPortfolioItems);
     }
-
-    filterButtons.forEach(button => {
-      button.addEventListener("click", () => {
-        filterButtons.forEach(btn => btn.classList.remove("active"));
-        button.classList.add("active");
-        const filter = button.dataset.filter;
-        if (filter === "all") {
-          renderPortfolio(allPortfolioItems);
-          return;
-        }
-        const filtered = allPortfolioItems.filter(item => {
-          const category = String(item.category || "").toLowerCase();
-          const mediaType = String(item.media_type || "").toLowerCase();
-          const selected = filter.toLowerCase();
-          return category === selected || mediaType === selected;
-        });
-        renderPortfolio(filtered);
-      });
-    });
 
     loadPortfolio();
   </script>
