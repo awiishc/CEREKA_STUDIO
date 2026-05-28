@@ -189,7 +189,23 @@
   <section id="contact">
     <div class="container contact">
       <div class="card contact-info"><div class="kicker">Book A Date</div><h2>Let’s create something memorable.</h2><p>Clients can send inquiries here. Later, this form can submit directly into a Supabase booking_requests table.</p><div class="detail"><span>WhatsApp: +60 XX-XXX XXXX</span><span>Email: hello@cerekastudio.com</span><span>Location: Malaysia</span></div></div>
-      <form class="card form"><input type="text" placeholder="Your name"><input type="tel" placeholder="Phone / WhatsApp"><input type="email" placeholder="Email address"><select><option>Choose service</option><option>Photography</option><option>Videography</option><option>Photo + Video</option><option>Brand Content</option></select><input type="date"><input type="text" placeholder="Event location"><textarea placeholder="Tell me about your event or project"></textarea><button type="button" class="btn primary">Submit Inquiry</button></form>
+      <form class="card form" id="bookingForm">
+        <input id="bookingName" type="text" placeholder="Your name" required>
+        <input id="bookingPhone" type="tel" placeholder="Phone / WhatsApp" required>
+        <input id="bookingEmail" type="email" placeholder="Email address">
+        <select id="bookingService" required>
+          <option value="">Choose service</option>
+          <option value="Photography">Photography</option>
+          <option value="Videography">Videography</option>
+          <option value="Photo + Video">Photo + Video</option>
+          <option value="Brand Content">Brand Content</option>
+        </select>
+        <input id="bookingDate" type="date">
+        <input id="bookingLocation" type="text" placeholder="Event location">
+        <textarea id="bookingMessage" placeholder="Tell me about your event or project"></textarea>
+        <button id="bookingSubmitBtn" type="submit" class="btn primary">Submit Inquiry</button>
+        <div id="bookingStatus" style="grid-column:1/-1;color:#d6a45d;font-size:.9rem;line-height:1.5;min-height:22px;"></div>
+      </form>
     </div>
   </section>
 
@@ -329,6 +345,65 @@
       renderTitleFilters(allPortfolioItems);
       renderPortfolio(allPortfolioItems);
     }
+
+
+    const bookingForm = document.getElementById("bookingForm");
+    const bookingSubmitBtn = document.getElementById("bookingSubmitBtn");
+    const bookingStatus = document.getElementById("bookingStatus");
+
+    function setBookingStatus(message, type = "") {
+      if (!bookingStatus) return;
+      bookingStatus.textContent = message;
+      bookingStatus.style.color = type === "error" ? "#ff5a5a" : type === "success" ? "#64d98a" : "#d6a45d";
+    }
+
+    if (bookingForm) {
+      bookingForm.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        bookingSubmitBtn.disabled = true;
+        setBookingStatus("Submitting your inquiry...");
+
+        try {
+          const name = document.getElementById("bookingName").value.trim();
+          const phone = document.getElementById("bookingPhone").value.trim();
+          const email = document.getElementById("bookingEmail").value.trim();
+          const serviceType = document.getElementById("bookingService").value;
+          const eventDate = document.getElementById("bookingDate").value || null;
+          const eventLocation = document.getElementById("bookingLocation").value.trim();
+          const message = document.getElementById("bookingMessage").value.trim();
+
+          if (!name || !phone || !serviceType) {
+            throw new Error("Please fill in your name, phone number, and service type.");
+          }
+
+          const { error } = await supabaseClient
+            .from("booking_requests")
+            .insert({
+              name,
+              phone,
+              email: email || null,
+              service_type: serviceType,
+              event_date: eventDate,
+              event_location: eventLocation || null,
+              message: message || null,
+              status: "new"
+            });
+
+          if (error) {
+            throw error;
+          }
+
+          bookingForm.reset();
+          setBookingStatus("Inquiry submitted successfully. Cereka Studio will contact you soon.", "success");
+        } catch (error) {
+          setBookingStatus(error.message || "Could not submit inquiry. Please try again.", "error");
+        } finally {
+          bookingSubmitBtn.disabled = false;
+        }
+      });
+    }
+
 
     loadPortfolio();
   </script>
