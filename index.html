@@ -115,7 +115,7 @@
 </head>
 <body>
   <nav class="nav">
-    <a href="#home" class="brand"><div class="brand-mark">DV</div><span>Darwish Visuals</span></a>
+    <a href="#home" class="brand"><div class="brand-mark">DV</div><span>Cereka Studio</span></a>
     <div class="nav-links">
       <a href="#services">Services</a><a href="#portfolio">Portfolio</a><a href="#packages">Packages</a><a href="#contact">Contact</a><a href="#admin">Admin</a>
     </div>
@@ -161,15 +161,17 @@
     <div class="container">
       <div class="section-head">
         <div><div class="kicker">Selected Work</div><h2>Portfolio</h2></div>
-        <p>This section will pull photos and video links from Supabase. For now, it uses sample visuals as a rough preview.</p>
+        <p>This section now reads visible portfolio items from your Supabase portfolio_items table.</p>
       </div>
-      <div class="filters"><button class="pill active">All</button><button class="pill">Events</button><button class="pill">Portraits</button><button class="pill">Weddings</button><button class="pill">Video</button></div>
-      <div class="portfolio">
-        <article class="item large"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=80')"></div><div class="item-content"><span class="tag">Wedding</span><h3>Intimate Ceremony</h3><p>Warm outdoor wedding coverage.</p></div></article>
-        <article class="item"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=900&q=80')"></div><div class="item-content"><span class="tag">Portrait</span><h3>Graduation Portrait</h3><p>Clean cinematic portrait set.</p></div></article>
-        <article class="item"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1505236858219-8359eb29e329?auto=format&fit=crop&w=900&q=80')"></div><div class="play">▶</div><div class="item-content"><span class="tag">Video</span><h3>Event Highlight</h3><p>Short film preview link.</p></div></article>
-        <article class="item wide"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1200&q=80')"></div><div class="item-content"><span class="tag">Event</span><h3>Night Celebration</h3><p>High-energy event photo album.</p></div></article>
-        <article class="item"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1554048612-b6a482bc67e5?auto=format&fit=crop&w=900&q=80')"></div><div class="item-content"><span class="tag">Brand</span><h3>Product Campaign</h3><p>Creative commercial visuals.</p></div></article>
+      <div class="filters" id="portfolioFilters">
+        <button class="pill active" data-filter="all">All</button>
+        <button class="pill" data-filter="Event">Events</button>
+        <button class="pill" data-filter="Portrait">Portraits</button>
+        <button class="pill" data-filter="Wedding">Weddings</button>
+        <button class="pill" data-filter="Video">Video</button>
+      </div>
+      <div class="portfolio" id="portfolioGrid">
+        <article class="item large"><div class="bg" style="background-image:url('https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=900&q=80')"></div><div class="item-content"><span class="tag">Loading</span><h3>Loading Supabase...</h3><p>Reading visible portfolio items.</p></div></article>
       </div>
     </div>
   </section>
@@ -190,7 +192,7 @@
 
   <section id="contact">
     <div class="container contact">
-      <div class="card contact-info"><div class="kicker">Book A Date</div><h2>Let’s create something memorable.</h2><p>Clients can send inquiries here. Later, this form can submit directly into a Supabase booking_requests table.</p><div class="detail"><span>WhatsApp: +60 XX-XXX XXXX</span><span>Email: hello@darwishvisuals.com</span><span>Location: Malaysia</span></div></div>
+      <div class="card contact-info"><div class="kicker">Book A Date</div><h2>Let’s create something memorable.</h2><p>Clients can send inquiries here. Later, this form can submit directly into a Supabase booking_requests table.</p><div class="detail"><span>WhatsApp: +60 XX-XXX XXXX</span><span>Email: hello@cerekastudio.com</span><span>Location: Malaysia</span></div></div>
       <form class="card form"><input type="text" placeholder="Your name"><input type="tel" placeholder="Phone / WhatsApp"><input type="email" placeholder="Email address"><select><option>Choose service</option><option>Photography</option><option>Videography</option><option>Photo + Video</option><option>Brand Content</option></select><input type="date"><input type="text" placeholder="Event location"><textarea placeholder="Tell me about your event or project"></textarea><button type="button" class="btn primary">Submit Inquiry</button></form>
     </div>
   </section>
@@ -205,6 +207,122 @@
     </div>
   </section>
 
-  <footer><div class="container footer"><span>© 2026 Darwish Visuals. All rights reserved.</span><span>Photography / Videography / Creative Direction</span></div></footer>
+  <footer><div class="container footer"><span>© 2026 Cereka Studio. All rights reserved.</span><span>Photography / Videography / Creative Direction</span></div></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://aqcjxykchgefwdbtjcvz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxY2p4eWtjaGdlZndkYnRqY3Z6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5Nzk2MzcsImV4cCI6MjA5NTU1NTYzN30.oP-7acmK7Tj5whjAw_BqNi0KNRoGUReRP3f4XDT_ld0";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const portfolioGrid = document.getElementById("portfolioGrid");
+    const filterButtons = document.querySelectorAll("#portfolioFilters .pill");
+    let allPortfolioItems = [];
+
+    function escapeHTML(value) {
+      return String(value || "").replace(/[&<>'"]/g, function(char) {
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "'": "&#39;",
+          '"': "&quot;"
+        }[char];
+      });
+    }
+
+    function getItemClass(index) {
+      if (index === 0) return "item large";
+      if (index === 3) return "item wide";
+      return "item";
+    }
+
+    function renderPortfolio(items) {
+      if (!items.length) {
+        portfolioGrid.innerHTML = `
+          <article class="item large">
+            <div class="bg" style="background-image:linear-gradient(135deg, rgba(214,164,93,0.18), rgba(0,0,0,0.9))"></div>
+            <div class="item-content">
+              <span class="tag">Empty</span>
+              <h3>No portfolio items found</h3>
+              <p>Add visible items in Supabase to show them here.</p>
+            </div>
+          </article>
+        `;
+        return;
+      }
+
+      portfolioGrid.innerHTML = items.map((item, index) => {
+        const title = escapeHTML(item.title || "Untitled Project");
+        const category = escapeHTML(item.category || item.media_type || "Portfolio");
+        const description = escapeHTML(item.description || "Cereka Studio project.");
+        const mediaType = String(item.media_type || "image").toLowerCase();
+        const imageUrl = escapeHTML(item.image_url || "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=900&q=80");
+        const videoUrl = item.video_url ? escapeHTML(item.video_url) : "";
+        const openTag = videoUrl ? `<a class="${getItemClass(index)}" href="${videoUrl}" target="_blank" rel="noopener">` : `<article class="${getItemClass(index)}">`;
+        const closeTag = videoUrl ? `</a>` : `</article>`;
+        const playBadge = mediaType === "video" || videoUrl ? `<div class="play">▶</div>` : "";
+
+        return `
+          ${openTag}
+            <div class="bg" style="background-image:url('${imageUrl}')"></div>
+            ${playBadge}
+            <div class="item-content">
+              <span class="tag">${category}</span>
+              <h3>${title}</h3>
+              <p>${description}</p>
+            </div>
+          ${closeTag}
+        `;
+      }).join("");
+    }
+
+    async function loadPortfolio() {
+      const { data, error } = await supabaseClient
+        .from("portfolio_items")
+        .select("id,title,description,category,media_type,image_url,video_url,is_featured,created_at")
+        .eq("is_visible", true)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Supabase portfolio error:", error);
+        portfolioGrid.innerHTML = `
+          <article class="item large">
+            <div class="bg" style="background-image:linear-gradient(135deg, rgba(228,59,59,0.22), rgba(0,0,0,0.9))"></div>
+            <div class="item-content">
+              <span class="tag">Error</span>
+              <h3>Cannot load portfolio</h3>
+              <p>Check Supabase URL, anon key, table name, and RLS policy.</p>
+            </div>
+          </article>
+        `;
+        return;
+      }
+
+      allPortfolioItems = data || [];
+      renderPortfolio(allPortfolioItems);
+    }
+
+    filterButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        filterButtons.forEach(btn => btn.classList.remove("active"));
+        button.classList.add("active");
+        const filter = button.dataset.filter;
+        if (filter === "all") {
+          renderPortfolio(allPortfolioItems);
+          return;
+        }
+        const filtered = allPortfolioItems.filter(item => {
+          const category = String(item.category || "").toLowerCase();
+          const mediaType = String(item.media_type || "").toLowerCase();
+          const selected = filter.toLowerCase();
+          return category === selected || mediaType === selected;
+        });
+        renderPortfolio(filtered);
+      });
+    });
+
+    loadPortfolio();
+  </script>
 </body>
 </html>
