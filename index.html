@@ -420,6 +420,39 @@
       gap:16px;
     }
 
+    .portfolio-actions{
+      display:flex;
+      justify-content:center;
+      margin-top:26px;
+    }
+
+    .show-all-btn{
+      min-width:168px;
+      min-height:48px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:0 22px;
+      border-radius:999px;
+      border:1px solid rgba(214,164,93,.42);
+      background:rgba(214,164,93,.12);
+      color:var(--gold);
+      font-weight:900;
+      font-size:.78rem;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      transition:.25s ease;
+    }
+
+    .show-all-btn:hover{
+      transform:translateY(-3px);
+      background:var(--gold);
+      color:#050505;
+      border-color:transparent;
+    }
+
+    .show-all-btn.hidden{display:none}
+
     .item{
       position:relative;
       overflow:hidden;
@@ -799,6 +832,8 @@
       section{padding:70px 0}
       .services,.packages,.portfolio,.form{grid-template-columns:1fr}
       .portfolio{grid-auto-rows:280px}
+      .portfolio-actions{margin-top:22px}
+      .show-all-btn{width:100%;max-width:320px}
       .item.large,.item.wide{grid-row:auto;grid-column:auto}
       .form .btn{width:100%}
       .footer{display:grid}
@@ -905,6 +940,10 @@
           </div>
         </article>
       </div>
+
+      <div class="portfolio-actions">
+        <button class="show-all-btn hidden" id="portfolioShowAll" type="button">Show All</button>
+      </div>
     </div>
   </section>
 
@@ -998,6 +1037,7 @@
 
     const portfolioGrid = document.getElementById("portfolioGrid");
     const filterWrap = document.getElementById("portfolioFilters");
+    const portfolioShowAll = document.getElementById("portfolioShowAll");
     const packagesGrid = document.getElementById("packagesGrid");
     const menuBtn = document.getElementById("menuBtn");
     const mobileMenu = document.getElementById("mobileMenu");
@@ -1010,6 +1050,9 @@
     const modalVideoLink = document.getElementById("modalVideoLink");
 
     let allPortfolioItems = [];
+    let currentPortfolioFilter = "all";
+    let isAllPortfolioExpanded = false;
+    let allPortfolioRandomSample = [];
     let currentSettings = {
       business_name: "Cereka Studio",
       whatsapp_number: ""
@@ -1109,6 +1152,41 @@
       return "item";
     }
 
+    function shuffleItems(items) {
+      return [...items].sort(() => Math.random() - 0.5);
+    }
+
+    function getAllPortfolioPreviewItems() {
+      if (isAllPortfolioExpanded) return allPortfolioRandomSample;
+      return allPortfolioRandomSample.slice(0, 6);
+    }
+
+    function updateShowAllButton() {
+      if (!portfolioShowAll) return;
+
+      const shouldShow = currentPortfolioFilter === "all" && !isAllPortfolioExpanded && allPortfolioRandomSample.length > 6;
+      portfolioShowAll.classList.toggle("hidden", !shouldShow);
+    }
+
+    function getImagePosition(item) {
+      const directPosition = item.image_position || item.preview_position || item.object_position || item.background_position;
+
+      if (directPosition) {
+        return String(directPosition).replace(/[^a-zA-Z0-9% ._-]/g, "").trim() || "center center";
+      }
+
+      const x = item.image_position_x || item.preview_position_x || item.object_position_x;
+      const y = item.image_position_y || item.preview_position_y || item.object_position_y;
+
+      if (x || y) {
+        const cleanX = String(x || "50%").replace(/[^0-9.% -]/g, "").trim() || "50%";
+        const cleanY = String(y || "50%").replace(/[^0-9.% -]/g, "").trim() || "50%";
+        return `${cleanX} ${cleanY}`;
+      }
+
+      return "center center";
+    }
+
     function buildPortfolioFilters(items) {
       if (!filterWrap) return;
 
@@ -1125,13 +1203,19 @@
           button.classList.add("active");
 
           const filter = button.dataset.filter;
+          currentPortfolioFilter = filter;
 
           if (filter === "all") {
-            renderPortfolio(allPortfolioItems);
+            isAllPortfolioExpanded = false;
+            allPortfolioRandomSample = shuffleItems(allPortfolioItems);
+            renderPortfolio(getAllPortfolioPreviewItems());
+            updateShowAllButton();
             return;
           }
 
+          isAllPortfolioExpanded = false;
           renderPortfolio(allPortfolioItems.filter(item => item.title === filter));
+          updateShowAllButton();
         });
       });
     }
@@ -1148,6 +1232,7 @@
             </div>
           </article>
         `;
+        updateShowAllButton();
         return;
       }
 
@@ -1158,11 +1243,12 @@
         const mediaType = String(item.media_type || "image").toLowerCase();
         const imageUrl = escapeHTML(item.image_url || "https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=900&q=80");
         const videoUrl = item.video_url ? escapeHTML(item.video_url) : "";
+        const imagePosition = escapeHTML(getImagePosition(item));
         const playBadge = mediaType === "video" || videoUrl ? `<div class="play">▶</div>` : "";
 
         return `
           <article class="${getItemClass(index)}" onclick="openPortfolioModalById(\'${escapeHTML(item.id)}\')">
-            <div class="bg" style="background-image:url('${imageUrl}')"></div>
+            <div class="bg" style="background-image:url('${imageUrl}');background-position:${imagePosition}"></div>
             ${playBadge}
             <div class="item-content">
               <span class="tag">${category}</span>
@@ -1172,6 +1258,7 @@
           </article>
         `;
       }).join("");
+      updateShowAllButton();
     }
 
 
@@ -1226,11 +1313,20 @@
       if (event.key === "Escape") closePortfolioModal();
     });
 
+    if (portfolioShowAll) {
+      portfolioShowAll.addEventListener("click", function() {
+        currentPortfolioFilter = "all";
+        isAllPortfolioExpanded = true;
+        renderPortfolio(allPortfolioRandomSample);
+        updateShowAllButton();
+      });
+    }
+
 
     async function loadPortfolio() {
       const { data, error } = await supabaseClient
         .from("portfolio_items")
-        .select("id,title,description,category,media_type,image_url,video_url,is_featured,display_order,created_at")
+        .select("*")
         .eq("is_visible", true)
         .order("display_order", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: false });
@@ -1251,8 +1347,12 @@
       }
 
       allPortfolioItems = data || [];
+      allPortfolioRandomSample = shuffleItems(allPortfolioItems);
+      currentPortfolioFilter = "all";
+      isAllPortfolioExpanded = false;
       buildPortfolioFilters(allPortfolioItems);
-      renderPortfolio(allPortfolioItems);
+      renderPortfolio(getAllPortfolioPreviewItems());
+      updateShowAllButton();
     }
 
     function renderPackages(packages) {
